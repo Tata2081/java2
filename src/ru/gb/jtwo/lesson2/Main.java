@@ -2,56 +2,63 @@ package ru.gb.jtwo.lesson2;
 
 import javafx.scene.chart.ScatterChart;
 
+import javax.management.RuntimeErrorException;
 import java.awt.*;
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
 public class Main {
+    private static final  class RowExcessException extends RuntimeException {
+        RowExcessException(String message){super("Не соответсвует кол-во строк: " + message);}
+    }
+
+    private static final  class ColumnExcessException extends RuntimeException {
+        ColumnExcessException(String message){super("Не соответствует кол-во столбв: " + message);}
+    }
+
+    private static final  class StringIsNotNuberException extends RuntimeException {
+        StringIsNotNuberException(String message){super("Преданное значение не является числом: " + message);}
+    }
+
+    private static final int MAX_ROW = 4;
+    private static final int MAX_COLUMN = 4;
+
+    private static final String Test_String = "10 3 1 2\n2 3 2 2\n5 6 7 1\n300 3 1 20";
+
+
     public static void main(String[] args) {
-        String s = "10 3 1 2\n2 3 2 2\n5 6 7 1\n300 3 1 0";
-
-        String[][] array1 = new String[4][4];
-        float res;
-
-        try {
-            array1 = castSrtingToArray(s);
-            printArray(array1);
-            try {
-                res = sumAndDiv(array1);
-                System.out.println("Результат задания 2 = " + res);
-            } catch (NumberFormatException e) {
-                System.out.println("В массиве не все указанные значения числа! Получение результата не возможно!");
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Количестко элементов в строке, разделенных спец символами, не соответсвует матрице 4x4");
-        }
+        String[][] array1 = castSrtingToArray(Test_String);
+        System.out.println(Arrays.deepToString(array1));
+        float res = sumAndDiv(array1);
+        System.out.println("Результат задания 2 = " + res);
     }
 
-    private static String[][] castSrtingToArray(String s) throws ArrayIndexOutOfBoundsException{
-        String[][] strArray = new String[4][4];
+    private static String[][] castSrtingToArray(String s){
+        String[] s1 = s.split("\n");
+        if (s1.length != MAX_ROW) {
+            throw new RowExcessException(s1.length + ":\n" + s);
+        }
 
-
-        for (int i=0; i<4; i++){
-            String s1 = s.split("\n")[i];
-            for (int j=0; j<4; j++){
-                strArray[i][j] = s1.split(" ")[j];
+        String[][] result = new String[MAX_ROW][];
+        for (int i=0; i<s1.length; i++){
+            result[i] = s1[i].split(" ");
+            if (result[i].length != MAX_COLUMN) {
+                throw new ColumnExcessException(result[i].length + ":\n" + s);
             }
         }
-        return   strArray;
+        return result;
     }
 
-    private static void printArray(String[][] array1){
-        for (int i=0; i<array1.length; i++) {
-            for (int j=0; j<array1[i].length; j++){
-                System.out.print(array1[i][j] + " ");
-            }
-            System.out.println("");
-        }
-    }
 
     private static float sumAndDiv(String[][] array1) throws NumberFormatException{
         float result = 0;
         for (int i=0; i < array1.length; i++){
             for (int j = 0; j < array1[i].length; j++){
-                result += Integer.parseInt(array1[i][j]);
+                try {
+                    result += Integer.parseInt(array1[i][j]);
+                } catch (NumberFormatException e) {
+                    throw new StringIsNotNuberException(array1[i][j]);
+                }
             }
         }
         return (result / 2);
